@@ -18,33 +18,34 @@ public class Aggregator {
     @Autowired
     private ObjectMapper objectMapper;
 
-	static Map<String, Integer> votesByPartyName = new LinkedHashMap<>();
+    static Map<String, Integer> votesByPartyName = new LinkedHashMap<>();
 
-    public void aggregator(String data){
+    public void aggregator(String data) {
 
-		FinalResponse finalResponse = null;
-		try {
-			//map the json output from queue to FinalResponse class
-			finalResponse = objectMapper.readValue(data, FinalResponse.class);
-		} catch (JsonProcessingException e) {
-			LOGGER.warn("Exception while mapping to final response object"+e.getMessage());
-			e.printStackTrace();
-		}
+        FinalResponse finalResponse = null;
+        try {
+            //map the json output from queue to FinalResponse class
+            finalResponse = objectMapper.readValue(data, FinalResponse.class);
+        } catch (JsonProcessingException e) {
+            LOGGER.warn("Exception while mapping to final response object" + e.getMessage());
+            e.printStackTrace();
+        }
 
-		//populate the static map that holds the number of votes
-		finalResponse.getFinalResponse().stream()
-										.forEach(voteInfoFromQueue -> {
-											String partyName = voteInfoFromQueue.getPartyName();
-											Integer votes = votesByPartyName.get(partyName)!=null?(voteInfoFromQueue.getNoOfVotes()+votesByPartyName.get(partyName)):voteInfoFromQueue.getNoOfVotes();
-											votesByPartyName.put(partyName,votes);
-										});
+        //populate the static map that holds the number of votes
+        finalResponse.getFinalResponse().stream()
+                .forEach(voteInfoFromQueue -> {
+                    String partyName = voteInfoFromQueue.getPartyName();
+                    Integer votes = votesByPartyName.get(partyName) != null ? (voteInfoFromQueue.getNoOfVotes() + votesByPartyName.get(partyName)) : voteInfoFromQueue.getNoOfVotes();
+                    votesByPartyName.put(partyName, votes);
+                });
 
-		printToLogs();
+        //Print the logs with delay of 5 seconds
+        printToLogs();
     }
 
-	@Scheduled(fixedDelay=5000)
-	public void printToLogs() {
-		LOGGER.info("Final output");
-    	votesByPartyName.entrySet().forEach(entry->System.out.println(entry.getKey()+" total votes "+entry.getValue()));
-	}
+    @Scheduled(fixedDelay = 5000)
+    public void printToLogs() {
+        LOGGER.info("Final output");
+        votesByPartyName.entrySet().forEach(entry -> System.out.println(entry.getKey() + " total votes " + entry.getValue()));
+    }
 }
